@@ -1,0 +1,61 @@
+// Main file for cubadv network (CUrrent BAsed synapses that produce abrupt "dv").
+
+{load_file("nrngui.hoc")}  // GUI and runtime libraries
+
+// defines obfunc newcell(), which creates a new instance of the IntFireCur class
+{load_file("cubadvcell.hoc")}  // called by create_cells() in common/net.hoc
+
+// Procedures that set up network architecture and performance reporting.
+{load_file("../common/init.hoc")}
+
+// Note: in original spec from Alain, threshold is -50(mV), reset is -60(mV)
+// and the voltage jumps are 0.25 and -2.25 respectively.
+// IntFireCur's threshold is at 1, and reset is to 0.  Therefore
+AMPA_GMAX = 0.25/10
+GABA_GMAX = -2.25/10
+
+if (pc.id == 0) printf("AMPA_GMAX = %g  GABA_GMAX = %g\n", AMPA_GMAX, GABA_GMAX)
+AMPA_INDEX = -1
+GABA_INDEX = -1
+
+DELAY = 1
+
+// Create the cells, then connect them.
+create_net()  // in common/net.hoc
+
+// Randomized spike trains driving excitatory synapses.
+create_stim(run_random_low_start_, 2)  // in common/netstim.hoc
+
+cvode.queue_mode(0,1)  // Can speed things up when there are no 0 delay netcons.
+
+// A few last items for performance reports, e.g. set up spike time recording, and,
+// if in "demo" mode, create graph for raster plots, and panel with Stop button.
+finish_setup()  // in common/init.hoc
+
+// Parallel run to tstop.
+prun()  // in common/perfrun.hoc
+
+// Only the "master" cpu does this.
+if (pc.id == 0) {print "RunTime: ", runtime}
+
+// Up to this point, all CPUs have executed the same code,
+// except for taking different branches depending on their value of pc.id,
+// which ranges from 0 to pc.nhost-1.
+
+// Gather performance statistics from each CPU.
+
+// Only the master (pc.id == 0) returns from pc.runworker().
+// All other CPUs ("workers") now wait for messages.
+{pc.runworker()}
+
+// Send requests to the workers and handle the results they send back.
+collect_results()  // in common/init.hoc
+
+// Send all workers a QUIT message; those NEURON processes exit.
+// The master waits until all worker output has been transferred to it.
+{pc.done()}
+
+// Only the master executes code beyond this point; all others have exited.
+
+// Times of all spikes, and consolidated performance report.
+output_results()  // in common/perfrun.hoc

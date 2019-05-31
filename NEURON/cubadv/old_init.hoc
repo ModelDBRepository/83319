@@ -1,0 +1,30 @@
+{load_file("nrngui.hoc")}
+{load_file("cubadvcell.hoc")}
+{load_file("../common/init.hoc")}
+
+// Note: in original spec from Alain, threshold is -50(mV), reset is -60(mV)
+// and the voltage jumps are 0.25 and -2.25 respectively. Therefore
+AMPA_GMAX = 0.25/10
+GABA_GMAX = -2.25/10
+
+
+if (pc.id == 0) printf("AMPA_GMAX = %g  GABA_GMAX = %g\n", AMPA_GMAX, GABA_GMAX)
+AMPA_INDEX = -1
+GABA_INDEX = -1
+
+DELAY = 1
+create_net()
+create_stim(run_random_low_start_, 2)
+
+cvode.queue_mode(0,1) //can speed things up when there are no 0 delay netcons
+finish_setup()
+
+// parallel run to tstop
+prun()
+if (pc.id == 0) {print "RunTime: ", runtime}
+{pc.runworker()}
+
+collect_results()
+{pc.done()}
+
+output_results()

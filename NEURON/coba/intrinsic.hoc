@@ -1,0 +1,23 @@
+load_file("nrngui.hoc")
+load_file("cobacell.hoc")
+objref cell
+cell = new CobaCell(1)
+access cell.soma
+objref stim[2], nc[2]
+
+stim = new NetStim()
+stim.start = 1
+stim.number = 1
+nc = new NetCon(stim, cell.synlist.object(0))
+nc.delay = 0
+nc.weight = .006
+
+stim[1] = new NetStim()
+stim[1].start = 300
+stim[1].number = 1
+nc[1] = new NetCon(stim[1], cell.synlist.object(1))
+nc[1].delay = 0
+nc[1].weight = .067
+
+load_file("intrinsic.ses")
+

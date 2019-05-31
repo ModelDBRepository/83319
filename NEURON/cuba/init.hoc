@@ -1,0 +1,114 @@
+// Main file for network of cells with coba (COnductance BAsed) synapses.
+
+{load_file("nrngui.hoc")}  // GUI and runtime libraries
+{load_file("cubacell.hoc")}  // defines obfunc newcell() which spawns a new cell
+
+// Procedures that set up network architecture and performance reporting.
+{load_file("../common/init.hoc")}
+
+/* To implement this network model with IF3, the first question is how to 
+represent the cells, and the second is how to represent the synapses.
+
+1.  How to represent the cells.
+A simple linear transformation of voltage to m takes care of this.
+Cell type                IF      IF3
+Membrane state variable  Vm       m
+  rest                  -49mV    1.1 (i.e. b = 1.1--see below)
+  threshold             -50      1.0
+  reset                 -60      0.0
+i.e. DV of 10 mV in Alain's IF model corresponds to Dm of 1 in IF3.
+The membrane time constant remains the same.
+
+What about IF3's bias parameter b?  The "resting potential" of IF is -49 mV.
+The same linear transformation that maps reset (Vm == -60mV) to m == 0, 
+and threshold (Vm == -50 mV) to m == 1, maps the -49 mV "resting potential
+to 1.1.  This is the value of b.
+Testing this by an alternative approach:  from an initial value of -60 mV, 
+the passive model takes 20*log(11) = 47.957905 ms to reach -50 mV.  With 
+the IF3's b == 1.1, m rises from 0 to 1 in 47.957905 ms.  This confirms 
+that b should equal 1.1.
+
+2.  How to represent the synapses.
+The strategy is to determine the EPSP and IPSP amplitudes in the IF model 
+(deflections from the -49 mV resting potential) produced by unitary current 
+source synapses with the specified peak gs and driving forces (49 mV and 
+-31 mV, respectively).  Divide these amplitudes by 10 to get the synaptic 
+weights for IF3 (because DV==10 mV in IF corresponds to Dm==1 in IF3, 
+and a synapse with weight 1 causes Dm==1 in IF3).
+
+This could be done analytically, but it's easier to use a passive model cell
+with the same area and membrane properties as IF.  One could attach current
+source synapses (which deliver current ic = gsyn(t)*(erev - vrest)), observe 
+their effects on membrane potential, and use these values to decide what 
+weights to use with the IF3 implementation.  A convenient short cut is to 
+use conductance change synapses, which deliver current
+ig = gsyn(t)*(erev - v(t))   (variable driving force)
+This is conveniently done with a couple of ExpSyns with the peak conductances 
+and reversal potentials specified by Alain.
+                   Initial                    Fraction of initial
+      Peak Gs      driving force  DV          driving force
+EPSP  0.00027 uS   49 mV          0.2082 mV   0.004
+IPSP  0.0045 uS   -31 mV         -3.2427 mV   0.103
+
+The EPSP's driving force varies less 0.5% during synaptic activation, so 
+this synapse is acting like a current source, and dividing the EPSP amplitude 
+by 10 yields the excitatory weight for the IF3 net:  0.02082.
+
+But the IPSP is so big that its driving force drops by about 10% from the 
+initial value of 31 mV.  Reducing its peak Gs by a factor of 10 and trying
+again gives this result
+                   Initial                    Fraction of initial
+      Peak Gs      driving force  DV          driving force
+IPSP  0.00045 uS  -31 mV         -0.3464 mV   0.011
+
+This "10 x weaker" synapse is close enough to a current source.  Thus, a 
+current source synapse with peak Gs of 0.0045 uS would produce a -3.464 mV
+IPSP, and the inhibitory weight for the IF3 net must be -0.3464.
+*/
+
+AMPA_GMAX = 0.02082
+GABA_GMAX = -0.3464
+
+if (pc.id == 0) printf("AMPA_GMAX = %g  GABA_GMAX = %g\n", AMPA_GMAX, GABA_GMAX)
+AMPA_INDEX = -1
+GABA_INDEX = -1
+
+// Create the cells, then connect them.
+create_net()  // in common/net.hoc
+// Randomized spike trains driving excitatory synapses.
+create_stim(run_random_low_start_, AMPA_GMAX)  // in common/netstim.hoc
+
+// can speed things up when there are no 0 delay netcons
+cvode.queue_mode(0,1)
+
+// A few last items for performance reports, e.g. set up spike time recording, and,
+// if in "demo" mode, create graph for raster plots, and panel with Stop button.
+finish_setup()  // in common/init.hoc
+
+// Parallel run to tstop.
+prun()  // in common/perfrun.hoc
+
+// Only the "master" cpu does this.
+if (pc.id == 0) {print "RunTime: ", runtime}
+
+// Up to this point, all CPUs have executed the same code,
+// except for taking different branches depending on their value of pc.id,
+// which ranges from 0 to pc.nhost-1.
+
+// Gather performance statistics from each CPU.
+
+// Only the master (pc.id == 0) returns from pc.runworker().
+// All other CPUs ("workers") now wait for messages.
+{pc.runworker()}
+
+// Send requests to the workers and handle the results they send back.
+collect_results()  // in common/init.hoc
+
+// Send all workers a QUIT message; those NEURON processes exit.
+// The master waits until all worker output has been transferred to it.
+{pc.done()}
+
+// Only the master executes code beyond this point; all others have exited.
+
+// Times of all spikes, and consolidated performance report.
+output_results()  // in common/perfrun.hoc

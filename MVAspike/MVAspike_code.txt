@@ -1,0 +1,87 @@
+#include <iostream>
+using namespace std;
+
+#include "mvaspike.h"
+
+#define NE 3200
+#define NI 800
+
+// Benchmark 4 implementation
+// simplest: flat model (no populations)
+//           using only basic primitives (can be verbose)
+//           using precalculated stimuli (easier to understand)
+//           using only built-in objects
+
+int main()
+{
+  Root r;
+  DCoupled c;
+  Lif n[NE+NI];
+  ExtSpikeTrain stim[NE+NI];
+  MemSpikeRecorder rec;
+
+  r.set_system(c);
+
+  for (int i=0;i<NE+NI;i++)
+    {
+      c.add_component(n[i]);
+      // time unit: ms
+      n[i].set_Trefra(5);
+      n[i].set_Tau(20);
+      // voltage unit: mV
+      n[i].set_threshold(-50);
+      n[i].set_Vreset(-60);
+      // using I (baseline) to take the Leak reversal potential into
+account.
+      n[i].set_I(-49);
+      n[i].set_V(-60);
+    }
+
+  for (int i=0;i<NE+NI;i++)
+    for (int j=0;j<NE+NI;j++)
+      // no self-connection, proba connection 0.02
+      if ((i!=j) &&((rnd(1.0)<0.02)))
+        {
+          // add an input port (a synapse) to the post-synaptic neuron
+          int p=n[j].add_inport();
+          // connect from i to j, no delay
+          c.connect(i,0,j,p,0);
+
+          // synaptic parameters
+          if (i<NE)              // pre-synaptic is excitatory
+            n[j].set_w(p,.25);   // so post-synaptic effect is excitatory
+          else
+            n[j].set_w(p,-2.25); // resp. inhibitory
+        }
+
+  // only used for initial stimulation: random
+  // poisson processes
+
+  for (int i=0;i<NE+NI;i++)
+    {
+      c.add_component(stim[i]);
+      int p=n[i].add_inport();
+      c.connect(i+NE+NI,0,i,p,0.0);
+      n[i].set_w(p,10.0); // check if ok
+      double t=rnd_poisson(10.0);
+      while (t<50.0)
+        {
+          stim[i].add_spike(t);
+          t+=rnd_poisson(10.0);
+        }
+    }
+
+  r.record(rec);
+  r.init();
+  // we are now ready to go: the model has been described.
+  // and digested by the simulator (init).
+
+  cerr << "init done." << endl;
+  // initial random stimulation
+  r.run(50);
+  cerr << "stimulation done." << endl;
+  r.run(5000);
+  // saving stuff
+  rec.save("spikes.txt");
+}
+

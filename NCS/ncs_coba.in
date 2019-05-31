@@ -1,0 +1,272 @@
+############################## Brain Definition ################################
+
+BRAIN
+	TYPE				B1_Brain
+	JOB				Benchmark_IF_G-based_Syn
+	FSV				10000
+	DURATION			1
+#	IGNORE_EMPTY			NO
+	DISTANCE			NO
+	SEED				-15
+	STIMULUS_INJECT		poisson_stiminject1
+	COLUMN_TYPE			AI_1
+	REPORT				AI1_E1_Voltage
+	REPORT				AI1_E2_Voltage
+	REPORT				AI1_I_Voltage
+END_BRAIN
+
+############################### Define Column Shells #########################
+
+COLUMN_SHELL
+        TYPE                    AI_shell_1
+        WIDTH                   300
+        HEIGHT                  800
+        LOCATION                0               0
+END_COLUMN_SHELL
+
+############################### Fill Columns #################################
+
+COLUMN
+        TYPE                    AI_1
+        COLUMN_SHELL            AI_shell_1
+        LAYER_TYPE              layer_E1
+        LAYER_TYPE              layer_E2
+        LAYER_TYPE              layer_I
+        CONNECT
+                                layer_E1   Excitatory      s1
+                                layer_I    Inhibitory      s1
+                                ExcitSyn1  0.02             0
+        CONNECT
+                                layer_I    Inhibitory      s1
+                                layer_E1   Excitatory      s1
+                                InhibSyn1  0.02             0
+
+        CONNECT
+                                layer_E1    Excitatory      s1
+                                layer_E2    Excitatory      s1
+                                ExcitSyn1   0.02             0
+        CONNECT
+                                layer_E2    Excitatory      s1
+                                layer_E1    Excitatory      s1
+                                ExcitSyn1   0.02             0
+
+        CONNECT
+                                layer_E2   Excitatory      s1
+                                layer_I    Inhibitory      s1
+                                ExcitSyn1  0.02             0
+        CONNECT
+                                layer_I    Inhibitory      s1
+                                layer_E2   Excitatory      s1
+                                InhibSyn1  0.02             0
+
+END_COLUMN
+
+############################### Define Layer Shells #########################
+
+LAYER_SHELL
+	TYPE				layer_shell_E1
+	LOWER				0
+	UPPER				35
+END_LAYER_SHELL
+
+LAYER_SHELL
+	TYPE				layer_shell_E2
+	LOWER				35
+	UPPER				70
+END_LAYER_SHELL
+
+LAYER_SHELL
+	TYPE				layer_shell_I
+	LOWER				70
+	UPPER				105
+END_LAYER_SHELL
+
+############################### Fill Layers ##################################
+
+LAYER
+	TYPE				layer_E1
+	LAYER_SHELL			layer_shell_E1
+       CELL_TYPE              	Excitatory      14
+       CONNECT
+                                	Excitatory      s1
+                                	Excitatory      s1
+                                	ExcitSyn1       0.02           0
+END_LAYER
+
+LAYER
+	TYPE				layer_E2
+	LAYER_SHELL			layer_shell_E2
+       CELL_TYPE              	Excitatory      3186
+       CONNECT
+                                	Excitatory      s1
+                                	Excitatory      s1
+                                	ExcitSyn1       0.02             0
+END_LAYER
+
+LAYER
+        TYPE                    layer_I
+        LAYER_SHELL             layer_shell_I
+        CELL_TYPE               Inhibitory      800
+        CONNECT
+                                Inhibitory      s1
+                                Inhibitory      s1
+                                InhibSyn1       0.02             0
+END_LAYER
+
+############################### Define Cells ################################
+CELL
+	TYPE				Excitatory
+	COMPARTMENT			soma_exc		s1	0	0	0
+END_CELL
+CELL
+	TYPE				Inhibitory
+	COMPARTMENT			soma_inhib		s1	0	0	0
+END_CELL
+
+############################### Define Compartments ##########################
+COMPARTMENT
+        TYPE                    soma_exc
+        SPIKESHAPE              AP_Hoff
+        TAU_MEMBRANE            0.020           0.0
+        R_MEMBRANE              200             0
+        THRESHOLD               -50             0
+        VMREST                  -60             0
+END_COMPARTMENT
+
+COMPARTMENT
+        TYPE                    soma_inhib
+        SPIKESHAPE              AP_Hoff
+        TAU_MEMBRANE            0.020           0.0
+        R_MEMBRANE              200             0
+        THRESHOLD               -50             0
+        VMREST                  -60             0
+END_COMPARTMENT
+
+############################### Define Synapse ##############################
+
+SYNAPSE
+	TYPE			ExcitSyn1
+	SFD_LABEL		NO_SFD
+	LEARN_LABEL		NO_LEARN
+	SYN_PSG		PSGexcit
+	MAX_CONDUCT		0.010		0.0
+	DELAY			0.0000000001	0.0000000001
+	SYN_REVERSAL		0		0
+	ABSOLUTE_USE		0.250		0.0
+END_SYNAPSE
+
+SYNAPSE
+	TYPE			InhibSyn1
+	SFD_LABEL		NO_SFD
+	LEARN_LABEL		NO_LEARN
+	SYN_PSG		PSGinhib
+	MAX_CONDUCT		0.100		0.0
+	DELAY			0.0000000001	0.0000000001
+	SYN_REVERSAL		-80		0
+	ABSOLUTE_USE		0.250		0.0
+END_SYNAPSE
+
+############################### Short-term Synaptic Dynamics ###############
+
+# Exc
+SYN_FACIL_DEPRESS
+        TYPE                    NO_SFD
+        SFD                     NONE
+        FACIL_TAU               0.0           0.0
+        DEPR_TAU                0.0           0.0
+END_SYN_FACIL_DEPRESS
+
+############################### Synaptic waveform #########################
+
+SYN_PSG
+        TYPE                    PSGexcit
+        PSG_FILE                /home/milindz/work/brain_model/EPSG_Vogels.txt
+END_SYN_PSG
+
+SYN_PSG
+        TYPE                    PSGinhib
+        PSG_FILE                /home/milindz/work/brain_model/IPSG_Vogels.txt
+END_SYN_PSG
+
+############################### Long-term Synaptic Dynamics ###############
+SYN_LEARNING
+        TYPE                    NO_LEARN
+        LEARNING                NONE
+	 NEG_HEB_WINDOW          0.04            0.0
+        POS_HEB_WINDOW          0.04            0.0
+        POS_HEB_PEAK_DELTA_USE  0.01            0.0
+        NEG_HEB_PEAK_DELTA_USE  0.005           0.0
+        POS_HEB_PEAK_TIME       0.01            0.0
+        NEG_HEB_PEAK_TIME       0.01            0.0
+END_SYN_LEARNING
+
+############################### Define spikeshapes #######################
+
+SPIKESHAPE
+  TYPE     AP_Hoff
+  VOLTAGES -38 -35 -30 -20 -7 15 30 20 7 -8 -16 -22 -28 -33 -37 -40 -43 -45 -50 -55 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60 -60
+END_SPIKESHAPE
+
+############################### Define Stimulus ##########################
+STIMULUS
+	TYPE				poisson_stimulus1
+	MODE				CURRENT
+	PATTERN			FILE_BASED
+	FILENAME			/home/milindz/work/brain_model/poiss_14rows.txt
+	TIME_FREQ_INCREMENT		0.0025	1
+	FREQ_ROWS			14
+	CELLS_PER_FREQ		1
+	DYN_RANGE			0	400
+	TIMING				EXACT
+	SAMESEED			NO
+	AMP_START			3
+	WIDTH				0.001
+	TIME_START			0
+	TIME_END			0.05
+	FREQ_START			999999
+END_STIMULUS
+
+STIMULUS_INJECT
+	TYPE				poisson_stiminject1
+	STIM_TYPE			poisson_stimulus1
+	INJECT				AI_1 layer_E1 Excitatory s1 1.0
+END_STIMULUS_INJECT
+
+############################### Define Reports ###########################
+
+REPORT
+	TYPE				AI1_E1_Voltage
+	CELLS				AI_1 layer_E1 Excitatory s1
+	# Probability of No. of cells being selected = 100%
+	PROB				1
+	REPORT_ON			VOLTAGE
+	FILENAME			AI1_E1_Voltage.txt
+	ASCII
+	FREQUENCY			1
+	TIME_START			0.0
+	TIME_END			1
+END_REPORT
+
+REPORT
+	TYPE				AI1_E2_Voltage
+	CELLS				AI_1 layer_E2 Excitatory s1
+	PROB				1
+	REPORT_ON			VOLTAGE
+	FILENAME			AI1_E2_Voltage.txt
+	ASCII
+	FREQUENCY			1
+	TIME_START			0.0
+	TIME_END			1
+END_REPORT
+
+REPORT
+	TYPE				AI1_I_Voltage
+	CELLS				AI_1 layer_I Inhibitory s1
+	PROB				1
+	REPORT_ON			VOLTAGE
+	FILENAME			AI1_I_Voltage.txt
+	ASCII
+	FREQUENCY			1
+	TIME_START			0.0
+	TIME_END			1
+END_REPORT

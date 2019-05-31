@@ -1,0 +1,8 @@
+obfunc newcell() {localobj cell
+        cell =  new IntFireCur()
+        cell.tau = 20
+        cell.refrac = 5
+	cell.minf = 11/10
+	cell.gid = $1
+        return cell
+}

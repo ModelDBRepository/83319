@@ -1,0 +1,34 @@
+Instructions for incorporating the "isynchan" object into GENESIS
+-----------------------------------------------------------------
+
+The GENESIS synchan object (documented in the GENESIS Reference Manual)
+implements a dual-exponential model of synaptic conductance, with two time
+constants tau1 and tau2.  The isynchan is a modification to synchan that
+provides an instantaneous rise to a conductance gmax, followed by an
+exponential decay with time constant tau1.  The fields and usage are the
+same as for the synchan, but the value of the tau2 field is ignored.
+
+This directory (isynchan) contains the top level Makefile (derived from
+Usermake), and the library directory isynlib, which contains the source
+code for the isynchan object and the library Makefile (derived from
+Libmake).  It also contains a precompiled executable "igenesis" that was
+compiled under Fedora Core 5 Linux on a x386 (Pentium) with gcc 4.1.0.
+This may run under your Linux installation. If not, or you are using a
+different OS or hardware platform, follow the instructions below to compile
+a version of GENESIS that includes the isynchan objecct.  In either case,
+you must have first installed GENESIS.
+
+The top level Makefile in the isynchan directory will need to be edited in
+order to provide the definitions (MACHINE, OS, etc.) for your GENESIS
+installation, and INSTALLDIR (GENINST in older versions of GENESIS) should
+be set to the place where GENESIS is installed.  The provided
+isynlib/Makefile should not require further editing.
+
+The documentation in the GENESIS Reference Manual on "Customizing GENESIS"
+gives further details of compiling these, and similar user-contributed
+libraries, into GENESIS.  Note that these files should NOT be installed in
+the genesis/src directory.
+
+Once the Makefile has been properly edited, it should be possible to type
+"make" in order to create a new genesis executable "igenesis" that
+incorporates the new isynchan object.

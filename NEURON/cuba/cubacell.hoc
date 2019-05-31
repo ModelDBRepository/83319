@@ -1,0 +1,8 @@
+obfunc newcell() {localobj cell
+        cell =  new IF3()
+        cell.taum = 20
+        cell.taue = 5
+        cell.taui = 10
+	cell.b = 1.1 // see cuba/init.hoc
+        return cell
+}
