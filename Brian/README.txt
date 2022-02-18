@@ -2,7 +2,7 @@ These are scripts for the simulator Brian (http://brian.di.ens.fr) implementing 
 
 Simulation of networks of spiking neurons: A review of tools and strategies (2007).
 Brette, Rudolph, Carnevale, Hines, Beeman, Bower, Diesmann, Goodman, Harris, Zirpe,
-Natschläger, Pecevski, Ermentrout, Djurfeldt, Lansner, Rochel, Vibert, Alvarez, Muller,
+Natschlager, Pecevski, Ermentrout, Djurfeldt, Lansner, Rochel, Vibert, Alvarez, Muller,
 Davison, El Boustani and Destexhe.
 Journal of Computational Neuroscience 23(3):349-98
 
