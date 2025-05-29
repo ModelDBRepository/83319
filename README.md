@@ -13,8 +13,7 @@ The submitted version of the paper is available at this URL:
 
 These files updated October 15th, 2008 to include Brian and PyNN.
 
+## Changelog
 20110805 Ted Carnevale corrected the synaptic time constants for the NEURON implemetation of the coba model (see NEURON/coba/cobacell.hoc).
 
----
-
-2025-05-27 – Standardized to Markdown
+20250527 Standardized to Markdown
