@@ -57,5 +57,5 @@ ni[0..49]'=an(vi[j])*(1-ni[j])-bn(vi[j])*ni[j]
 init ve[0..199]=-65
 init vi[0..49]=-65
 # some numerical settings
-@ total=200,meth=euler,nout=10,dt=.01
+@ total=200,meth=cvode,nout=10,dt=.01,bounds=100000
 done
